@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <title>台中口罩數量</title>
+
+  <!-- Bootstrap core CSS -->
+  <link rel="icon" href="favicon.png" />
+  <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Custom styles for this template -->
+  <link href="css/simple-sidebar.css" rel="stylesheet">
+
+  <script src="location.js"></script>
+</head>
+
+<body>
+
+  <div class="d-flex" id="wrapper">
+
+    <!-- Sidebar -->
+    <div class="bg-light border-right" id="sidebar-wrapper">
+      <div class="sidebar-heading">台中口罩數量</div>
+      <div class="list-group list-group-flush">
+        <a href="index.html" class="list-group-item list-group-item-action bg-light">口罩地圖：成人</a>
+        <a href="index-child.html" class="list-group-item list-group-item-action bg-light">口罩地圖：兒童</a>
+        <a href="table.html" class="list-group-item list-group-item-action bg-light">藥局查詢</a>
+        <a href="about.html" class="list-group-item list-group-item-action bg-light">設計動機</a>
+      </div>
+    </div>
+    <!-- /#sidebar-wrapper -->
+
+    <!-- Page Content -->
+    <div id="page-content-wrapper">
+
+      <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
+        <button class="btn btn-secondary btn-sm" id="menu-toggle">選單</button>
+
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+          aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+
+      </nav>
+
+      <div class="container-fluid">
+        <br>
+        <table id="my_table" class="table"></table>
+
+
+      </div>
+    </div>
+    <!-- /#page-content-wrapper -->
+
+  </div>
+  <!-- /#wrapper -->
+
+  <!-- Bootstrap core JavaScript -->
+  <script src="vendor/jquery/jquery.min.js"></script>
+  <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.css">
+  <script type="text/javascript" charset="utf8"
+    src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.js"></script>
+
+  <!-- Menu Toggle Script -->
+  <script>
+    var table_data = [];
+
+    var script = document.createElement('script');
+    script.onload = function () {
+      if (typeof udata !== 'undefined') {
+        let data = JSON.parse(sites_info);
+        let udata_obj = JSON.parse(udata);
+        for (let arr of udata_obj) {
+
+          let k = arr[0];
+          if (data[k] === undefined) {
+            console.log("can't find ====>" + k);
+            continue;
+          }
+
+          let one_store = [];
+          one_store.push(data[k]['name']);
+          one_store.push(data[k]['phone']);
+          one_store.push(data[k]['address']);
+          one_store.push(arr[2]); // child
+          one_store.push(arr[1]); // adult
+          one_store.push(arr[3]); // utime
+          //one_store.push('<button>test</button>');
+          table_data.push(one_store);
+
+        }
+
+        $('#my_table').DataTable({
+          data: table_data,
+          columns: [
+            { title: "藥局" },
+            { title: "電話" },
+            { title: "地址" },
+            { title: "兒童口罩" },
+            { title: "成人口罩" },
+            { title: "更新時間" }
+           // { title: "功能" }
+          ],
+          "order": [[4, "desc"]],
+          "language": {
+            "sProcessing": "處理中...",
+            "sLengthMenu": "顯示 _MENU_ 項結果",
+            "sZeroRecords": "沒有匹配結果",
+            "sInfo": "顯示第 _START_ 至 _END_ 項結果，共 _TOTAL_ 項",
+            "sInfoEmpty": "顯示第 0 至 0 項結果，共 0 項",
+            "sInfoFiltered": "(從 _MAX_ 項結果過濾)",
+            "sInfoPostFix": "",
+            "sSearch": "搜尋：",
+            "sUrl": "",
+            "oPaginate": {
+              "sFirst": "首頁",
+              "sPrevious": "上頁",
+              "sNext": "下頁",
+              "sLast": "末頁"
+            }
+          }
+        });
+        //$('#my_table').DataTable();
+
+      }
+    };
+    script.src = 'qty.js?v=' + new Date().getTime();
+    document.head.appendChild(script);
+
+  </script>
+
+</body>
+
+</html>

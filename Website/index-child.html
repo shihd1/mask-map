@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <title></title>
+
+  <!-- Bootstrap core CSS -->
+  <link rel="icon" href="favicon.png" />
+  <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Custom styles for this template -->
+  <link href="css/simple-sidebar.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css"
+    integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="
+    crossorigin="" />
+  <!-- Make sure you put this AFTER Leaflet's CSS -->
+  <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"
+    integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew=="
+    crossorigin=""></script>
+  <script src="location.js"></script>
+</head>
+
+<body>
+
+  <div class="d-flex" id="wrapper">
+
+    <!-- Sidebar -->
+    <div class="bg-light border-right" id="sidebar-wrapper">
+      <div class="sidebar-heading">台中口罩地圖</div>
+      <div class="list-group list-group-flush">
+        <a href="index.html" class="list-group-item list-group-item-action bg-light">口罩地圖：成人</a>
+        <a href="index-child.html" class="list-group-item list-group-item-action bg-light">口罩地圖：兒童</a>
+        <a href="table.html" class="list-group-item list-group-item-action bg-light">藥局查詢</a>
+        <a href="about.html" class="list-group-item list-group-item-action bg-light">設計動機</a>
+      </div>
+    </div>
+    <!-- /#sidebar-wrapper -->
+
+    <!-- Page Content -->
+    <div id="page-content-wrapper">
+
+      <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
+        <button class="btn btn-secondary btn-sm" id="menu-toggle">選單</button>
+
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+          aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        
+      </nav>
+
+      <div class="container-fluid">
+
+
+        <div class="alert alert-light" role="alert">
+          <table class="table table-bordered .table-sm">
+            <tbody class="text-center">
+              <tr>
+                <td>超過 50 個</td>
+                <td>20 ~ 50</td>
+                <td>少於 20</td>
+                <td>無庫存</td>
+              </tr>
+              <tr>
+                <td><img src="i50.png" alt="" srcset=""></td>
+                <td><img src="i20.png" alt="" srcset=""></td>
+                <td><img src="i20l.png" alt="" srcset=""></td>
+                <td><img src="i0.png" alt="" srcset=""></td>
+              </tr>
+
+            </tbody>
+          </table>
+        </div>
+        <div id="mapid" style="height: 600px;"></div>
+      </div>
+    </div>
+    <!-- /#page-content-wrapper -->
+
+  </div>
+  <!-- /#wrapper -->
+
+  <!-- Bootstrap core JavaScript -->
+  <script src="vendor/jquery/jquery.min.js"></script>
+  <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Menu Toggle Script -->
+  <script>
+    //24.1484209,120.6734669,14.25z
+    const def_lat = 24.1484209;
+    const def_lng = 120.6734669;
+    const EARTH_RADIUS = 6378.137;
+    var my_pos = null;
+    var my_map;
+    var watchID = navigator.geolocation.watchPosition(function (position) {
+      my_pos = [position.coords.latitude, position.coords.longitude];
+    }
+    );
+
+    $("#menu-toggle").click(function (e) {
+      e.preventDefault();
+      $("#wrapper").toggleClass("toggled");
+    });
+
+
+    function rad(d) {
+      return d * Math.PI / 180.0;
+    }
+
+    function get_distance(lat1, lng1) {
+      let lat2 = def_lat;
+      let lng2 = def_lng;
+      let radLat1 = rad(lat1);
+      let radLat2 = rad(lat2);
+      let a = radLat1 - radLat2;
+      let b = rad(lng1) - rad(lng2);
+      let s = 2 * Math.sin(Math.sqrt(Math.pow(Math.sin(a / 2), 2) +
+        Math.cos(radLat1) * Math.cos(radLat2) * Math.pow(Math.sin(b / 2), 2)));
+      s = s * EARTH_RADIUS;
+      s = Math.round(s * 10000) / 10000;
+      return s;
+    }
+
+    function get_Icon(path) {
+      return L.icon({
+        iconUrl: path,
+        shadowUrl: 'is2.png',
+        iconSize: [75, 75], // size of the icon   
+        shadowSize: [75, 75],
+        iconAnchor: [36, 60], // point of the icon which will correspond to marker's location 
+        shadowAnchor: [36, 60],
+        tooltipAnchor: [20, -30] // point from which the popup should open relative to the iconAnchor
+      });
+    }
+
+    var script = document.createElement('script');
+    script.onload = function () {
+      //-----------ICON----------------
+      var i0 = get_Icon('i0.png'),
+        i20l = get_Icon('i20l.png'),
+        i20 = get_Icon('i20.png'),
+        i50 = get_Icon('i50.png');
+      //-----------ICON----------------
+
+
+      if (my_pos != null) {
+
+        var dist = get_distance(my_pos[0], my_pos[1]);
+        console.log('定位距離!!  ==> ' + dist);
+        if (dist < 60) {
+          my_map = L.map('mapid').setView(my_pos, 15);
+        } else {
+          my_map = L.map('mapid').setView([def_lat, def_lng], 15);
+        }
+
+      } else {
+        my_map = L.map('mapid').setView([def_lat, def_lng], 15);
+      }
+
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '<a href="https://www.openstreetmap.org/">OSM</a>',
+        maxZoom: 18,
+      }).addTo(my_map);
+
+
+      if (typeof udata !== 'undefined') {
+        let data = JSON.parse(sites_info);
+        let udata_obj = JSON.parse(udata);
+        for (let arr of udata_obj) {
+
+          let k = arr[0];
+          if (data[k] === undefined) {
+            console.log("can't find ====>" + k);
+            continue;
+          }
+          // console.log(data[k]['loc']);
+          // console.log(data[k]['name']);
+          // console.log(data[k]['address']);
+          // console.log("======");
+          let total = parseInt(arr[2]) + parseInt(arr[1]);
+          let imaker;
+          if (total == 0) {
+            imaker = i0;
+          } else if (total < 20) {
+            imaker = i20l;
+          } else if (total < 50) {
+            imaker = i20;
+          } else {
+            imaker = i50;
+          }
+
+          var marker = L.marker([data[k]['loc'][1], data[k]['loc'][0]], { icon: imaker }).addTo(my_map);
+          marker.bindTooltip('<h5 class="text-primary">' + data[k]['name'] + '</h5><p class="text-dark">' +
+            data[k]['address'] + '</p>' +
+            '<div class="alert alert-success" role="alert">兒童：' + arr[2] + '</div>'+ '<p class="text-muted">更新時間<br>' + arr[3] + '</p>');
+        }
+      }
+    };
+    script.src = 'qty.js?v=' + new Date().getTime();
+    document.head.appendChild(script);
+
+  </script>
+
+</body>
+
+</html>
