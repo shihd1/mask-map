@@ -23,7 +23,7 @@ public class GrabService {
             if (s == null || s.isEmpty()) {
                 break;
             }
-            if (s.contains("台中")) {
+            if (s.contains("台中")||s.contains("臺中")) {
                 String[] tokens = s.split(",");
                 //System.out.println((++i)+"  ==>  "+ Arrays.toString(tokens));
                 if (first) {
